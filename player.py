@@ -3,7 +3,7 @@ class Player(object):
     name = ""
 
     def __init__(self, name):
-        input = raw_input("Geben Sie einen Spielernamen ein: ")
+        input = raw_input("{0}. name:\t".format(int(name)))
         if input != "":
             self.name = input
         else:

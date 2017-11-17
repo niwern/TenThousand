@@ -26,13 +26,10 @@ class Game(object):
     players = {}
     goal = 10000
 
-    def __init__(self, number=2, goal=100):
-        if goal > 10000:
-            self.goal = 10000
-        else:
-            self.goal = goal
+    def __init__(self, number=2, goal=10000):
+        self.goal = goal
         if number < 2:
-            print("Es du brauchst mindestens 2 Spieler.")
+            print("at least 2 player")
             number = 2
         for i in range(number):
             self.players[player.Player(str(i+1))] = 0
@@ -45,15 +42,15 @@ class Game(object):
     def reround(self, dices, score):
         if dices < 1:
             dices = 5
-        a = str((raw_input("Mit {0} Punkten und {1} Wuerfeln weiter spielen? (Y/N) ".format(score, dices))))
+        a = str((raw_input("continue with\n\t {0} points & \n\t {1} \t dices? (Y/N) ".format(score, dices))))
         if a.upper() == 'N':
             return score
         elif a.upper() == 'Y':
-            return self.round(dices, score, True)
+            return self.round(dices, score)
         else:
             return self.reround(dices, score)
 
-    def round(self, dices, score, go_on):
+    def round(self, dices, score):
         if dices < 1:
             dices = 5
         # Mit den Wuerfeln wuerfeln + Ausgabe
@@ -61,10 +58,11 @@ class Game(object):
         for dice in range(dices):
             dice = Game.roll_the_dice()
             numbers.append(dice)
-        print("Wurfelergebnis = " + str(numbers))
+        numbers.sort()
+        print("\t\t"+ str(numbers))
 
         # Auswertung des Wuerfelns
-        stats = {}  # Dicctionary mit ( Augenzahl : Anzahl der Gleichen Augenzahlen )
+        stats = {1: 0, 5: 0}  # Dicctionary mit ( Augenzahl : Anzahl der Gleichen Augenzahlen )
         for x in numbers:
             if x in stats.keys():
                 stats[x] += 1
@@ -80,10 +78,11 @@ class Game(object):
                 max_key = key
         # Pasch analysieren
         if max_value >= 3:
-            print("{0}-er Pasch gefunden mit {1}.".format(str(max_value), str(max_key)))
+            print("{0} of the kind: {1}.".format(str(max_value), str(max_key)))
             if max_value == 4:
-                x = raw_input("Moechtest du 3 oder 4 Wuerfel zur Seite legen? ")
-                if x < 3 or x > 4 or x is None:
+                x = int(raw_input("take 3 or 4 dices: "))
+                # Lappentest
+                if 3 > x or x > 4 or x is None:
                     print("Falsche Eingabe! Du Lappen.")
                     x = 4
             else:
@@ -93,32 +92,36 @@ class Game(object):
                 pasch = 'ddddd'
             score += self.value_table[pasch]  # Punkte fuer den Pasch
             time.sleep(5)
-            return self.round(dices - x, score, True)
+            return self.round(dices - x, score)
         # Nach 1 und 5 schauen
         elif 1 in numbers or 5 in numbers:
-            score1 = 0
-            score5 = 0
-            x1 = 0
-            x5 = 0
-            if 1 in numbers:
-                x1 = int(raw_input("Du hast {0} Einser. Wie viele legst du zur Seite? ".format(stats[1])))
-                if x1 < 0 or x1 > stats[1]:
-                    print("Falsche Eingabe! Du Lappen.")
-                    x1 = stats[1]
-                score1 = self.value_table["1"] * x1
-            if 5 in numbers:
-                x5 = int(raw_input("Du hast {0} Fuenfer. Wie viele legst du zur Seite? ".format(stats[5])))
-                if x5 < 0 or x5 > stats[5]:
-                    print("Falsche Eingabe! Du Lappen.")
-                    x5 = stats[5]
-                score5 = self.value_table["5"] * x5
-            score += score1 + score5
-            x = x1 + x5
-            if x > 0:
-                return self.reround(dices - x, score)
+            if 1 in numbers and 5 in numbers:
+                out = "{0}x 1 \t{1}x 5\t={2} take: ".format(stats[1], stats[5], stats[1] + stats[5])
+            elif 1 in numbers:
+                out = "{0}x 1 \ttake:  ".format(stats[1])
             else:
+                out = "{0}x 5 \ttake: ".format(stats[5])
+
+            try:
+                x = int(raw_input(out))
+            except ValueError:
+                x = stats[1] + stats[5]
+
+            # Lappentest
+            if 0 > x or x > (int(stats[1] + stats[5])):
+                print("Falsche Eingabe! Du Lappen.")
+                x = int(stats[1]) + int(stats[5])
+            if x == 0:
                 return 0
-        print("Du hast alles verloren!")
+
+            dices -= x  #  x wuerfel entfernen
+            # score erhoehen
+            for i in range(stats[1]):
+                score += self.value_table["1"]
+                x -= 1
+            score += self.value_table["5"] * x
+            return self.reround(dices, score)
+        print("You lost everything!")
         return 0
 
     def get_max(self, a):
@@ -131,43 +134,44 @@ class Game(object):
     def main(self):
         while True:
             for p in self.players.keys():
-                print("{0} ist am Zug".format(p.name))
-                p.total_score += int(self.round(5, 0, True))
+                print("{0}'s turn:".format(p.name))
+                p.total_score += int(self.round(5, 0))
                 self.players[p] =  p.total_score
-                print("Jetztiger Punktestand von {0}: {1}".format(p.name, p.total_score))
-                time.sleep(1)
+                print("score:  {0}: {1}\n".format(p.name, p.total_score))
+                time.sleep(.5)
             os.system('clear')
             # Punktezwischenstand
             for p in self.players:
-                print("{0} hat {1} Punkte".format(p.name, p.total_score))
+                print("{0} has {1} points".format(p.name, p.total_score))
 
             # Kuerung des Gewinners bzw. Fuehrers
             max_score = self.get_max(self.players.values())
             if max_score > self.goal:
-                print("------------------------")
-                print("Gewinner dieses Matches:")
-                print("------------------------")
+                print("-----------------------")
+                print("Winner of this Matches:")
+                print("-----------------------")
                 for p in self.players.keys():
                     if self.players[p] == max_score:
                         print("{0} : {1}".format(p.name, self.players[p]))
                 sys.exit()
             else:
-                print("in Fuehrungen:")
+                print("in lead:")
                 for p in self.players.keys():
                     if self.players[p] == max_score:
-                        print("{0} : {1}".format(p.name, self.players[p]))
+                        print("\t {0} with {1}".format(p.name, self.players[p]))
                 print("")
 
 
-    @staticmethod
-    def start():
-        goal = raw_input("Wie bis wie hoch sollen die Punkte gehen? ")
-        number_of_player = raw_input("Wie viele Spieler seid ihr? ")
-        #if goal is not None:
-        goal = int(goal)
-        #if number_of_player is not None:
-        number_of_player = int(number_of_player)
-        Game(number_of_player, goal)
+def start():
+    try:
+        goal = int(raw_input("How hight is the goal? \t"))
+    except ValueError:
+        goal = 10000
+    try:
+        number_of_player = int(raw_input("How many player? \t\t"))
+    except ValueError:
+        number_of_player = 2
+    Game(int(number_of_player), int(goal))
 
 
-Game.start()
+start()
