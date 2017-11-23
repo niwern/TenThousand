@@ -1,8 +1,14 @@
 import random
 import sys
-import player
 import time
 import os
+from Tkinter import *
+
+import player
+import fenster
+
+def clicking_action():
+    print("Hallo I bims der Fun")
 
 
 class Game(object):
@@ -23,8 +29,9 @@ class Game(object):
         "1111": 10000,
         "ddddd": 10000
     }
-    players = {}
+    players = {}  # player : score
     goal = 10000
+    fenster = None
 
     def __init__(self, number=2, goal=10000):
         self.goal = goal
@@ -33,10 +40,11 @@ class Game(object):
             number = 2
         for i in range(number):
             self.players[player.Player(str(i+1))] = 0
-        self.main()
+        self.fenster = fenster.Window()
+        # self.main()
 
-    @staticmethod
-    def roll_the_dice():
+
+    def roll_the_dice(self):
         return random.randint(1, 6)
 
     def reround(self, dices, score):
@@ -56,10 +64,11 @@ class Game(object):
         # Mit den Wuerfeln wuerfeln + Ausgabe
         numbers = []
         for dice in range(dices):
-            dice = Game.roll_the_dice()
+            dice = self.roll_the_dice()
             numbers.append(dice)
         numbers.sort()
-        print("\t\t"+ str(numbers))
+        print("\t\t" + str(numbers))
+        # self.fenster.anweisungs_label.config(text= str(numbers))
 
         # Auswertung des Wuerfelns
         stats = {1: 0, 5: 0}  # Dicctionary mit ( Augenzahl : Anzahl der Gleichen Augenzahlen )
