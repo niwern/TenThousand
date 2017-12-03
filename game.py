@@ -5,7 +5,7 @@ import os
 from Tkinter import *
 
 import player
-import fenster
+import window
 
 def clicking_action():
     print("Hallo I bims der Fun")
@@ -31,7 +31,6 @@ class Game(object):
     }
     players = {}  # player : score
     goal = 10000
-    fenster = None
 
     def __init__(self, number=2, goal=10000):
         self.goal = goal
@@ -40,8 +39,8 @@ class Game(object):
             number = 2
         for i in range(number):
             self.players[player.Player(str(i+1))] = 0
-        self.fenster = fenster.Window()
-        # self.main()
+        fenster = window.Window()
+        self.main()
 
 
     def roll_the_dice(self):
@@ -172,6 +171,7 @@ class Game(object):
 
 
 def start():
+    Game()
     try:
         goal = int(raw_input("How hight is the goal? \t"))
     except ValueError:
